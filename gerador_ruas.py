@@ -1,42 +1,47 @@
+import random
+
+import osmnx as ox
 import networkx as nx
+import matplotlib
 import matplotlib.pyplot as plt
+
+matplotlib.use("TkAgg")  # Define o backend para evitar conflitos com o PyCharm
+
 
 class GeradorRuas:
 
-    def __init__(self):
+    def __init__(self, pais="brasil", cidade="itabaiana", estado="sergipe"):
         # Criar um grafo representando um mapa de cidade
-        self.G = nx.Graph()
-
-        # Adicionar cruzamentos e distâncias entre eles (arestas)
-        nodes = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
-        self.G.add_nodes_from(nodes)
-
-        # Adicionar ruas (arestas) com pesos representando distâncias
-        edges = [
-            ("A", "B", 4), ("A", "C", 2), ("B", "C", 5), ("B", "D", 10),
-            ("C", "E", 3), ("D", "F", 11), ("E", "D", 4), ("E", "F", 8),
-            ("F", "G", 7), ("G", "H", 2), ("H", "I", 6), ("I", "J", 3),
-            ("G", "I", 4), ("F", "J", 5), ("E", "H", 9), ("C", "I", 12)
-        ]
-
-        for edge in edges:
-            self.G.add_edge(edge[0], edge[1], weight=edge[2])
+        self.G = None
+        self.__transformar_ruas_em_grafos(pais, cidade, estado)
 
     def encontrar_rota(self):
-        # Encontrar a rota mais curta de A até C usando A* (heurística: distância)
-        rota = nx.astar_path(self.G, source="A", target="J", weight="weight")
-        print(f"Melhor rota: {rota}")
+        # Escolher dois pontos aleatórios como origem e destino
+        origem = random.choice(list(self.G.nodes))
+        destino = random.choice(list(self.G.nodes))
 
-    def desenhar_grafo(self):
-        plt.figure(figsize=(6, 4))  # Definir tamanho da figura
-        pos = nx.spring_layout(self.G, seed=42)  # Layout do grafo
-        nx.draw(self.G, pos, with_labels=True, node_color="lightblue", edge_color="gray", node_size=2000, font_size=12)
+        # Encontrar a melhor rota usando A* com heurística de distância
+        rota = nx.astar_path(self.G, origem, destino, weight="length")
 
-        # Adicionar pesos das arestas
-        edge_labels = nx.get_edge_attributes(self.G, 'weight')
-        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edge_labels, font_size=10)
+        # Plotar a rota no mapa
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ox.plot_graph_route(self.G, rota, ax=ax, route_linewidth=4, node_size=50, route_color="blue", node_color="red")
+        ax.title("Melhor Rota Encontrada pelo A*")
 
-        plt.title("Mapa das Rotas")
-        plt.savefig("grafo.png")  # Salva o gráfico como imagem
+        print(f"Origem: {origem}, Destino: {destino}")
 
+    def __transformar_ruas_em_grafos(self, pais="brasil", cidade="itabaiana", estado="sergipe"):
+        try:
+            localidade = f"{cidade}, {estado}, {pais}"
+
+            # Baixar o grafo real das ruas da cidade
+            self.G = ox.graph_from_place(localidade, network_type="drive")  # "drive" obtém apenas ruas para veículos
+        except ox._errors.InsufficientResponseError as error:
+            print(error)
+        else:
+            # Mostrar o grafo real do mapa
+            fig, ax = plt.subplots(figsize=(10, 8))
+            ox.plot_graph(self.G, ax=ax, node_color="red", edge_color="gray", node_size=10, bgcolor="white")
+            ax.set_title(f"Mapa Real das Ruas de {cidade}")
+            plt.savefig("localidade.png")
 
