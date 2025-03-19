@@ -1,4 +1,4 @@
-import random
+import sys
 
 import osmnx as ox
 import networkx as nx
@@ -13,22 +13,45 @@ class GeradorRuas:
     def __init__(self, pais="brasil", cidade="itabaiana", estado="sergipe"):
         # Criar um grafo representando um mapa de cidade
         self.G = None
-        self.__transformar_ruas_em_grafos(pais, cidade, estado)
+        self.pais = pais
+        self.cidade = cidade
+        self.estado = estado
+        self.__transformar_ruas_em_grafos(self.pais, self.cidade, self.estado)
 
-    def encontrar_rota(self):
-        # Escolher dois pontos aleatórios como origem e destino
-        origem = random.choice(list(self.G.nodes))
-        destino = random.choice(list(self.G.nodes))
+    def encontrar_rota(self, origem_rua, destino_rua):
+        try:
+            # Geocodificar os endereços para obter coordenadas geográficas
+            origem_coord = ox.geocode(f"{origem_rua}, {self.cidade}, {self.estado}, {self.pais}")
+            destino_coord = ox.geocode(f"{destino_rua}, {self.cidade}, {self.estado}, {self.pais}")
 
-        # Encontrar a melhor rota usando A* com heurística de distância
-        rota = nx.astar_path(self.G, origem, destino, weight="length")
+        except BaseException as error:
+            print(error, file=sys.stderr)
+        else:
+            # Encontrar os nós mais próximos dessas coordenadas no grafo
+            origem = ox.nearest_nodes(self.G, origem_coord[1], origem_coord[0])
+            destino = ox.nearest_nodes(self.G, destino_coord[1], destino_coord[0])
 
-        # Plotar a rota no mapa
-        fig, ax = plt.subplots(figsize=(10, 8))
-        ox.plot_graph_route(self.G, rota, ax=ax, route_linewidth=4, node_size=50, route_color="blue", node_color="red")
-        ax.title("Melhor Rota Encontrada pelo A*")
+            # Encontrar a melhor rota usando A* com heurística de distância
+            rota = nx.astar_path(self.G, origem, destino, weight="length")
 
-        print(f"Origem: {origem}, Destino: {destino}")
+            # Calcular a distância total da rota
+            distancia = sum(self.G[u][v][0]['length'] for u, v in zip(rota[:-1], rota[1:]))
+            distancia_km = round(distancia / 1000, 2)  # Converter para quilômetros
+
+            # Plotar a rota no mapa
+            fig, ax = plt.subplots(figsize=(10, 8))
+            ax.set_title(f"Melhor Rota Encontrada pelo A*. {distancia_km}km")
+
+            ### Não alterar a ordem de plot
+            # Primeiro ele vai plotar a melhor rota encontrada
+            ox.plot_graph_route(self.G, rota, ax=ax, route_linewidth=4, node_size=50, route_color="blue",
+                                show=False, close=False)
+
+            # Depois ele vai plotar o mapa da cidade "por cima da melhor rota encontrada"
+            ox.plot_graph(self.G, ax=ax, node_color="gray", edge_color="lightgray", node_size=10, bgcolor="white")
+            ###
+
+            print(f"Origem: {origem_rua}, Destino: {destino_rua}, Distância: {distancia_km}km")
 
     def __transformar_ruas_em_grafos(self, pais="brasil", cidade="itabaiana", estado="sergipe"):
         try:
@@ -38,10 +61,3 @@ class GeradorRuas:
             self.G = ox.graph_from_place(localidade, network_type="drive")  # "drive" obtém apenas ruas para veículos
         except ox._errors.InsufficientResponseError as error:
             print(error)
-        else:
-            # Mostrar o grafo real do mapa
-            fig, ax = plt.subplots(figsize=(10, 8))
-            ox.plot_graph(self.G, ax=ax, node_color="red", edge_color="gray", node_size=10, bgcolor="white")
-            ax.set_title(f"Mapa Real das Ruas de {cidade}")
-            plt.savefig("localidade.png")
-
