@@ -7,7 +7,7 @@ def main():
 
     ## Gerar as ruas para busca e achar a melhor rota
     G = GR(cidade="itabaiana")
-    G.encontrar_rota(origem_rua, destino_rua)
+    G.encontrar_rota(origem_rua)
 
 
 if __name__ == '__main__':

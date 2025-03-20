@@ -5,7 +5,7 @@ import networkx as nx
 import matplotlib
 import matplotlib.pyplot as plt
 
-# matplotlib.use("TkAgg")  # Se for usar no Pycharm descomente essa linha
+matplotlib.use("TkAgg")  # Se for usar no Pycharm descomente essa linha
 
 
 class GeradorRuas:
@@ -18,7 +18,7 @@ class GeradorRuas:
         self.estado = estado
         self.__transformar_ruas_em_grafos(self.pais, self.cidade, self.estado)
 
-    def encontrar_rota(self, origem_rua, destino_rua):
+    def encontrar_rota(self, origem_rua=None, destino_rua=None):
         try:
             # Geocodificar os endereços para obter coordenadas geográficas
             # Se a origem ou o destino não for informado o programa irá gerar um aleatório
@@ -31,8 +31,10 @@ class GeradorRuas:
             raise error
         else:
             # Encontrar os nós mais próximos dessas coordenadas no grafo
-            origem = ox.nearest_nodes(self.G, origem_coord[1], origem_coord[0])
-            destino = ox.nearest_nodes(self.G, destino_coord[1], destino_coord[0])
+            origem = ox.nearest_nodes(self.G, origem_coord[1], origem_coord[0]) if origem_rua \
+                else origem_coord
+            destino = ox.nearest_nodes(self.G, destino_coord[1], destino_coord[0]) if destino_rua \
+                else destino_coord
 
             # Encontrar a melhor rota usando A* com heurística de distância
             rota = nx.astar_path(self.G, origem, destino, weight="length")
