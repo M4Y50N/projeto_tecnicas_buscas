@@ -5,7 +5,7 @@ import networkx as nx
 import matplotlib
 import matplotlib.pyplot as plt
 
-matplotlib.use("TkAgg") # Se for usar no Pycharm descomente essa linha
+matplotlib.use("TkAgg")  # Se for usar no Pycharm descomente essa linha
 
 
 class GeradorRuas:
@@ -52,7 +52,7 @@ class GeradorRuas:
 
             # Depois ele vai plotar o mapa da cidade "por cima da melhor rota encontrada"
             ox.plot_graph(self.G, ax=ax, node_color="gray", edge_color="lightgray", node_size=10, bgcolor="white")
-            ###
+            ####
 
             print(f"Origem: {origem_rua}, Destino: {destino_rua}, Distância: {distancia_km}km")
 
