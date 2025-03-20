@@ -6,7 +6,7 @@ def main():
     destino_rua = "Padre Airton Gonçalves lima - sao cristovao"
 
     # Gerar as ruas para busca e achar a melhor rota
-    G = GR()
+    G = GR(cidade="itabaiana")
     G.encontrar_rota(origem_rua, destino_rua)
 
 

@@ -1,11 +1,11 @@
-import sys
+import random
 
 import osmnx as ox
 import networkx as nx
 import matplotlib
 import matplotlib.pyplot as plt
 
-matplotlib.use("TkAgg")  # Define o backend para evitar conflitos com o PyCharm
+matplotlib.use("TkAgg") # Se for usar no Pycharm descomente essa linha
 
 
 class GeradorRuas:
@@ -21,11 +21,14 @@ class GeradorRuas:
     def encontrar_rota(self, origem_rua, destino_rua):
         try:
             # Geocodificar os endereços para obter coordenadas geográficas
-            origem_coord = ox.geocode(f"{origem_rua}, {self.cidade}, {self.estado}, {self.pais}")
-            destino_coord = ox.geocode(f"{destino_rua}, {self.cidade}, {self.estado}, {self.pais}")
+            # Se a origem ou o destino não for informado o programa irá gerar um aleatório
+            origem_coord = ox.geocode(f"{origem_rua}, {self.cidade}, {self.estado}, {self.pais}") if origem_rua \
+                else random.choice(list(self.G.nodes))
+            destino_coord = ox.geocode(f"{destino_rua}, {self.cidade}, {self.estado}, {self.pais}") if destino_rua \
+                else random.choice(list(self.G.nodes))
 
         except BaseException as error:
-            print(error, file=sys.stderr)
+            raise error
         else:
             # Encontrar os nós mais próximos dessas coordenadas no grafo
             origem = ox.nearest_nodes(self.G, origem_coord[1], origem_coord[0])
@@ -60,4 +63,4 @@ class GeradorRuas:
             # Baixar o grafo real das ruas da cidade
             self.G = ox.graph_from_place(localidade, network_type="drive")  # "drive" obtém apenas ruas para veículos
         except ox._errors.InsufficientResponseError as error:
-            print(error)
+            raise error
