@@ -5,7 +5,7 @@ import networkx as nx
 import matplotlib
 import matplotlib.pyplot as plt
 
-matplotlib.use("TkAgg")  # Se for usar no Pycharm descomente essa linha
+# matplotlib.use("TkAgg")  # Se for usar no Pycharm descomente essa linha
 
 
 class GeradorRuas:
